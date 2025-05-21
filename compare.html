@@ -64,7 +64,7 @@
       const files = {};
       await Promise.all(Object.keys(zip.files).map(async name => {
         const entry = zip.files[name];
-        if (!entry.dir && (name.startsWith('DOS/') || name.startsWith('HPLIN/'))) {
+        if (!entry.dir && (name.startsWith('dos/') || name.startsWith('HPLIN/'))) {
           const size = entry._data.uncompressedSize || 0;
           files[name] = size;
         }
