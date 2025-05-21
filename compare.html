@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zip Karşılaştırma</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 1rem;
+      margin: auto;
+      max-width: 800px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #0066cc;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 1rem auto;
+    }
+    #status {
+      text-align: center;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    #result {
+      margin-top: 1rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    a {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      color: #0066cc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Zip Karşılaştırma</h1>
+  <input type="file" id="zipInput1" accept=".zip">
+  <input type="file" id="zipInput2" accept=".zip">
+  <div id="status"></div>
+  <div id="result"></div>
+  <a href="index.html">Ana Sayfaya Dön</a>
+  <script>
+    const zipInput1 = document.getElementById('zipInput1');
+    const zipInput2 = document.getElementById('zipInput2');
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+
+    async function readZip(file) {
+      const jszip = new JSZip();
+      const zip = await jszip.loadAsync(file);
+      const files = {};
+      await Promise.all(Object.keys(zip.files).map(async name => {
+        const entry = zip.files[name];
+        if (!entry.dir && (name.startsWith('dos/') || name.startsWith('HPLIN/'))) {
+          const size = entry._data.uncompressedSize || 0;
+          files[name] = size;
+        }
+      }));
+      return files;
+    }
+
+    async function handleFiles() {
+      if (!zipInput1.files[0] || !zipInput2.files[0]) return;
+      status.textContent = 'Zip dosyaları okunuyor...';
+      const files1 = await readZip(zipInput1.files[0]);
+      const files2 = await readZip(zipInput2.files[0]);
+      compare(files1, files2);
+      status.textContent = '';
+    }
+
+    function compare(f1, f2) {
+      const names = new Set([...Object.keys(f1), ...Object.keys(f2)]);
+      const items = [];
+      Array.from(names).sort().forEach(name => {
+        const s1 = f1[name];
+        const s2 = f2[name];
+        let color;
+        if (s1 != null && s2 != null) {
+          color = s1 === s2 ? 'black' : 'red';
+        } else {
+          color = 'gray';
+        }
+        items.push(`<li style="color:${color}">${name} - ${(s1 ?? '-')} vs ${(s2 ?? '-')}</li>`);
+      });
+      result.innerHTML = `<ul>${items.join('')}</ul>`;
+    }
+
+    zipInput1.addEventListener('change', handleFiles);
+    zipInput2.addEventListener('change', handleFiles);
+  </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zip Karşılaştırma</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 1rem;
+    margin: auto;
+    max-width: 800px;
+    background: #f4f6fb;
+    color: #222;
+  }
+  h1 {
+    text-align: center;
+    color: #1976d2;
+    margin-bottom: 1rem;
+  }
+  input[type="file"] {
+    display: block;
+    margin: 1rem auto;
+    font-size: 1rem;
+  }
+  #status {
+    text-align: center;
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+  #result {
+    margin-top: 1rem;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+    max-height: 400px;
+    overflow-x: auto;
+    overflow-y: auto;
+    white-space: normal;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.98rem;
+    margin-bottom: 1em;
+  }
+  th, td {
+    padding: 0.5em 0.3em;
+    text-align: left;
+    word-break: break-all;
+  }
+  th {
+    background: #e3f0fa;
+    color: #1976d2;
+    font-weight: 600;
+    border-bottom: 2px solid #b3d1ea;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  tr:nth-child(even) {
+    background: #f7fafc;
+  }
+  tr:nth-child(odd) {
+    background: #f0f4f8;
+  }
+  .color-same {
+    color: #222;
+  }
+  .color-diff {
+    color: #e53935;
+    font-weight: 600;
+  }
+  .color-missing {
+    color: #ff9800;
+    font-weight: 600;
+  }
+  .color-none {
+    color: #bdbdbd;
+  }
+  .legend {
+    margin-top: 1em;
+    font-size: 0.95em;
+    display: flex;
+    gap: 1.5em;
+    flex-wrap: wrap;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    margin-right: 0.3em;
+    vertical-align: middle;
+  }
+  .dot-same { background: #222; }
+  .dot-diff { background: #e53935; }
+  .dot-missing { background: #ff9800; }
+  @media (max-width: 600px) {
+    #result, table, th, td {
+      font-size: 0.93rem;
+    }
+    body {
+      padding: 0.3rem;
+    }
+    th, td {
+      padding: 0.4em 0.1em;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>Zip Karşılaştırma</h1>
+  <input type="file" id="zipInput1" accept=".zip">
+  <input type="file" id="zipInput2" accept=".zip">
+  <div id="status"></div>
+  <div id="result"></div>
+  <a href="index.html">Ana Sayfaya Dön</a>
+
+<script>
+const zipInput1 = document.getElementById('zipInput1');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+
+// Binlik ayırıcı ile boyut formatla
+function formatSize(size) {
+  if (typeof size !== "number") return "";
+  return size.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// dos/ ve dos/HPLIN/ altındaki tüm dosyaları (isim+boyut) ile döndürür
+async function findDosAndHplinFiles(fileOrArrayBuffer) {
+  const jszip = new JSZip();
+  let zip;
+  if (fileOrArrayBuffer instanceof ArrayBuffer) {
+    zip = await jszip.loadAsync(fileOrArrayBuffer);
+  } else {
+    const arrayBuffer = await fileOrArrayBuffer.arrayBuffer();
+    zip = await jszip.loadAsync(arrayBuffer);
+  }
+  const folders = {};
+
+  Object.keys(zip.files).forEach(name => {
+    // dos/ veya dos/HPLIN/ altındaki dosyalar
+    const match = name.match(/^(.*dos\/)(.*)$/i);
+    if (match && !zip.files[name].dir) {
+      const folder = match[1];
+      if (!folders[folder]) folders[folder] = {};
+      // dosya adı: alt klasörlerle birlikte (ör: HPLIN/abc.txt veya test.txt)
+      const relName = name.substring(folder.length);
+      const size = zip.files[name]._data ? zip.files[name]._data.uncompressedSize : zip.files[name].uncompressedSize;
+      folders[folder][relName] = size;
+    }
+  });
+
+  return folders;
+}
+
+function compareFolderContents(files1, files2) {
+  const allNames = Array.from(new Set([...Object.keys(files1), ...Object.keys(files2)])).sort();
+  return allNames.map(name => {
+    const size1 = files1[name];
+    const size2 = files2[name];
+    let cls1 = "color-same", cls2 = "color-same";
+    if (size1 == null && size2 != null) {
+      cls1 = "color-none";
+      cls2 = "color-missing";
+    } else if (size2 == null && size1 != null) {
+      cls1 = "color-missing";
+      cls2 = "color-none";
+    } else if (size1 !== size2) {
+      cls1 = cls2 = "color-diff";
+    }
+    return `<tr>
+      <td class="${cls1}">${size1 != null ? name + ' (' + formatSize(size1) + ' B)' : '-'}</td>
+      <td class="${cls2}">${size2 != null ? name + ' (' + formatSize(size2) + ' B)' : '-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function handleFiles(fileBuffer) {
+  result.innerHTML = '';
+  status.textContent = 'Zip dosyası okunuyor...';
+  let folders;
+  if (fileBuffer) {
+    folders = await findDosAndHplinFiles(fileBuffer);
+  } else if (zipInput1.files[0]) {
+    folders = await findDosAndHplinFiles(zipInput1.files[0]);
+  } else {
+    status.textContent = '';
+    return;
+  }
+  const folderNames = Object.keys(folders);
+  if (folderNames.length < 2) {
+    result.innerHTML = 'Zip içinde karşılaştırılacak en az iki dos klasörü bulunamadı.';
+    status.textContent = '';
+    return;
+  }
+
+  // İlk iki dos klasörünü karşılaştır
+  const folder1 = folderNames[0];
+  const folder2 = folderNames[1];
+  const files1 = folders[folder1];
+  const files2 = folders[folder2];
+
+  result.innerHTML = `
+    <b>${folder1}</b> ve <b>${folder2}</b> klasörleri karşılaştırılıyor:
+    <div style="overflow-x:auto;">
+    <table>
+      <tr>
+        <th>${folder1}</th>
+        <th>${folder2}</th>
+      </tr>
+      ${compareFolderContents(files1, files2)}
+    </table>
+    </div>
+    <div class="legend">
+      <span><span class="legend-dot dot-diff"></span>Kırmızı: Boyutu farklı dosyalar</span>
+      <span><span class="legend-dot dot-missing"></span>Turuncu: Sadece bir klasörde olan dosyalar</span>
+      <span><span class="legend-dot dot-same"></span>Siyah: Hem adı hem boyutu aynı olanlar</span>
+    </div>
+  `;
+  status.textContent = '';
+}
+
+zipInput1.addEventListener('change', () => handleFiles());
+
+// Sayfa ilk açıldığında otomatik olarak zip dosyasını indir ve karşılaştır
+/*window.addEventListener('DOMContentLoaded', async () => {
+  status.textContent = 'Zip dosyası indiriliyor...';
+  try {
+    const response = await fetch('https://www.ajancnc.com/support/windows_software.zip');
+    if (!response.ok) throw new Error('Dosya indirilemedi');
+    const arrayBuffer = await response.arrayBuffer();
+    await handleFiles(arrayBuffer);
+  } catch (e) {
+    status.textContent = 'Zip dosyası indirilemedi.';
+  }
+});*/
+</script>
+
+
+</body>
+</html>
