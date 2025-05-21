@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toplama Sayfası</title>
+  <style>
+    :root {
+      --primary: #0066cc;
+      --bg: #f9f9f9;
+      --accent: #e0e0e0;
+      --font: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      padding: 1rem;
+      margin: auto;
+      max-width: 800px;
+      background-color: var(--bg);
+      color: #333;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      text-align: center;
+      color: var(--primary);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    input[type="number"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 1rem;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Toplama Sayfası</h1>
+  <div class="container">
+    <input id="num1" type="number" placeholder="Birinci sayı" />
+    <input id="num2" type="number" placeholder="İkinci sayı" />
+    <button id="sumBtn">Topla</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const num1 = document.getElementById('num1');
+    const num2 = document.getElementById('num2');
+    const result = document.getElementById('result');
+    const sumBtn = document.getElementById('sumBtn');
+
+    sumBtn.addEventListener('click', () => {
+      const val1 = parseFloat(num1.value) || 0;
+      const val2 = parseFloat(num2.value) || 0;
+      const total = val1 + val2;
+      result.textContent = `Sonuç: ${total}`;
+    });
+  </script>
+</body>
+</html>
