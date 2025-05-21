@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Manifest Oluşturucu</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    h1 { font-size: 1.5rem; }
+    input { margin-top: 1rem; }
+    #status { margin-top: 1rem; color: green; }
+  </style>
+</head>
+<body>
+  <h1>Manifest Oluşturucu</h1>
+  <p>.zip dosyanı seç ve manifest.txt oluşturulsun.</p>
+  <input type="file" id="zipInput" accept=".zip">
+  <div id="status"></div>
+
+  <script>
+    document.getElementById('zipInput').addEventListener('change', async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const status = document.getElementById('status');
+      status.textContent = 'Zip dosyası okunuyor...';
+
+      const jszip = new JSZip();
+      const zip = await jszip.loadAsync(file);
+
+      const entries = [];
+
+      await Promise.all(Object.keys(zip.files).map(async filename => {
+        const entry = zip.files[filename];
+        if (!entry.dir) {
+          const size = entry._data.uncompressedSize || 0;
+          const date = entry.date.toISOString().replace('T', ' ').split('.')[0];
+          entries.push(`${filename} | ${size} bytes | ${date}`);
+        }
+      }));
+
+      const manifestContent = '# 📦 Manifest Dosyası\n\n' + entries.sort().join('\n');
+      const blob = new Blob([manifestContent], { type: 'text/plain;charset=utf-8' });
+      saveAs(blob, 'manifest.txt');
+
+      status.textContent = 'manifest.txt indirilmeye hazır!';
+    });
+  </script>
+</body>
+</html>
