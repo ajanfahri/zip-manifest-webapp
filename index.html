@@ -2,38 +2,94 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manifest Oluşturucu</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 700px; margin: auto; }
-    h1 { font-size: 1.5rem; }
+    :root {
+      --primary: #0066cc;
+      --bg: #f9f9f9;
+      --accent: #e0e0e0;
+      --font: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      padding: 1rem;
+      margin: auto;
+      max-width: 800px;
+      background-color: var(--bg);
+      color: #333;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      text-align: center;
+      color: var(--primary);
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 1rem auto;
+    }
+
     #dropZone {
-      border: 2px dashed #888;
+      border: 2px dashed var(--primary);
       padding: 2rem;
       text-align: center;
-      color: #666;
-      margin-top: 1rem;
-      background-color: #f9f9f9;
+      color: #555;
+      background-color: var(--bg);
+      border-radius: 8px;
+      transition: background-color 0.2s ease;
     }
+
     #preview {
       white-space: pre-wrap;
-      background: #f0f0f0;
+      background: #fff;
       padding: 1rem;
       margin-top: 1rem;
       border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
       max-height: 300px;
       overflow-y: auto;
     }
-    #downloadBtn {
+
+    #status {
+      text-align: center;
       margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    #downloadBtn {
       display: none;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 1rem auto;
+      display: block;
+    }
+
+    #langSwitch {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: var(--primary);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <h1>Manifest Oluşturucu</h1>
-  <p>Zip dosyanı sürükle veya aşağıdan seç.</p>
+  <div id="langSwitch">English</div>
+  <h1 id="title">Manifest Oluşturucu</h1>
+  <p id="instructions">Zip dosyanı sürükle veya aşağıdan seç.</p>
   <input type="file" id="zipInput" accept=".zip">
   <div id="dropZone">Buraya .zip dosyasını bırak</div>
   <div id="status"></div>
@@ -46,10 +102,47 @@
     const status = document.getElementById('status');
     const preview = document.getElementById('preview');
     const downloadBtn = document.getElementById('downloadBtn');
+    const langSwitch = document.getElementById('langSwitch');
     let manifestBlob = null;
+    let isEnglish = false;
+
+    const texts = {
+      tr: {
+        title: "Manifest Oluşturucu",
+        instructions: "Zip dosyanı sürükle veya aşağıdan seç.",
+        dropHere: "Buraya .zip dosyasını bırak",
+        reading: "Zip dosyası okunuyor...",
+        ready: "manifest.txt oluşturuldu",
+        download: "manifest.txt'yi indir"
+      },
+      en: {
+        title: "Manifest Generator",
+        instructions: "Drag and drop a .zip file or select below.",
+        dropHere: "Drop your .zip file here",
+        reading: "Reading zip file...",
+        ready: "manifest.txt is ready",
+        download: "Download manifest.txt"
+      }
+    };
+
+    function updateLanguage() {
+      const t = isEnglish ? texts.en : texts.tr;
+      document.getElementById('title').textContent = t.title;
+      document.getElementById('instructions').textContent = t.instructions;
+      dropZone.textContent = t.dropHere;
+      downloadBtn.textContent = t.download;
+      langSwitch.textContent = isEnglish ? 'Türkçe' : 'English';
+    }
+
+    langSwitch.addEventListener('click', () => {
+      isEnglish = !isEnglish;
+      updateLanguage();
+    });
+
+    updateLanguage();
 
     async function processZip(file) {
-      status.textContent = 'Zip dosyası okunuyor...';
+      status.textContent = isEnglish ? texts.en.reading : texts.tr.reading;
       preview.textContent = '';
       downloadBtn.style.display = 'none';
 
@@ -69,8 +162,8 @@
       const manifestContent = '# 📦 Manifest Dosyası\n\n' + entries.sort().join('\n');
       preview.textContent = manifestContent;
       manifestBlob = new Blob([manifestContent], { type: 'text/plain;charset=utf-8' });
-      downloadBtn.style.display = 'inline-block';
-      status.textContent = 'manifest.txt oluşturuldu';
+      downloadBtn.style.display = 'block';
+      status.textContent = isEnglish ? texts.en.ready : texts.tr.ready;
     }
 
     zipInput.addEventListener('change', e => {
