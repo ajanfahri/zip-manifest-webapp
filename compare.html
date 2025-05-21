@@ -13,6 +13,8 @@
       max-width: 800px;
       background-color: #f9f9f9;
       color: #333;
+      line-height: 1.5;
+      padding-bottom: 4rem;
     }
     h1 {
       text-align: center;
@@ -38,10 +40,25 @@
       white-space: pre-wrap;
     }
     a {
-      display: block;
+      display: inline-block;
       text-align: center;
       margin-top: 1rem;
-      color: #0066cc;
+      color: #fff;
+      background: #0066cc;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #e0e0e0;
+      text-align: center;
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -101,5 +118,6 @@
     zipInput1.addEventListener('change', handleFiles);
     zipInput2.addEventListener('change', handleFiles);
   </script>
+  <footer>created by Fahreddin TOKATLI</footer>
 </body>
 </html>
