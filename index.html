@@ -21,6 +21,8 @@
       max-width: 800px;
       background-color: var(--bg);
       color: #333;
+      line-height: 1.5;
+      padding-bottom: 4rem; /* space for fixed footer */
     }
 
     h1 {
@@ -84,6 +86,32 @@
       cursor: pointer;
       font-size: 0.9rem;
     }
+
+    .links {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .links a {
+      display: inline-block;
+      margin: 0.25rem;
+      background-color: var(--primary);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--accent);
+      text-align: center;
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
@@ -95,9 +123,11 @@
   <div id="status"></div>
   <div id="preview"></div>
   <button id="downloadBtn">manifest.txt'yi indir</button>
-  <a href="compare.html">Karşılaştır</a><br>
-  <a href="comparesame.html">Windows Software Karşılaştır</a><br>
-<a href=sum.html>sum sayfasi</a>
+  <div class="links">
+    <a href="compare.html">Karşılaştır</a>
+    <a href="comparesame.html">Windows Software Karşılaştır</a>
+    <a href="sum.html">Toplama Sayfası</a>
+  </div>
   <script>
     const zipInput = document.getElementById('zipInput');
     const dropZone = document.getElementById('dropZone');
@@ -197,5 +227,6 @@
       }
     });
   </script>
+  <footer>created by Fahreddin TOKATLI</footer>
 </body>
 </html>

@@ -13,6 +13,8 @@
     max-width: 800px;
     background: #f4f6fb;
     color: #222;
+    line-height: 1.5;
+    padding-bottom: 4rem;
   }
   h1 {
     text-align: center;
@@ -103,6 +105,25 @@
   .dot-same { background: #222; }
   .dot-diff { background: #e53935; }
   .dot-missing { background: #ff9800; }
+  a {
+    display: inline-block;
+    margin-top: 1rem;
+    color: #fff;
+    background: #1976d2;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+  }
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #e0e0e0;
+    text-align: center;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+  }
   @media (max-width: 600px) {
     #result, table, th, td {
       font-size: 0.93rem;
@@ -245,7 +266,6 @@ zipInput1.addEventListener('change', () => handleFiles());
   }
 });*/
 </script>
-
-
+<footer>created by Fahreddin TOKATLI</footer>
 </body>
 </html>
