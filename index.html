@@ -6,29 +6,55 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    body { font-family: sans-serif; padding: 2rem; max-width: 700px; margin: auto; }
     h1 { font-size: 1.5rem; }
-    input { margin-top: 1rem; }
-    #status { margin-top: 1rem; color: green; }
+    #dropZone {
+      border: 2px dashed #888;
+      padding: 2rem;
+      text-align: center;
+      color: #666;
+      margin-top: 1rem;
+      background-color: #f9f9f9;
+    }
+    #preview {
+      white-space: pre-wrap;
+      background: #f0f0f0;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    #downloadBtn {
+      margin-top: 1rem;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>Manifest Oluşturucu</h1>
-  <p>.zip dosyanı seç ve manifest.txt oluşturulsun.</p>
+  <p>Zip dosyanı sürükle veya aşağıdan seç.</p>
   <input type="file" id="zipInput" accept=".zip">
+  <div id="dropZone">Buraya .zip dosyasını bırak</div>
   <div id="status"></div>
+  <div id="preview"></div>
+  <button id="downloadBtn">manifest.txt'yi indir</button>
 
   <script>
-    document.getElementById('zipInput').addEventListener('change', async function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    const zipInput = document.getElementById('zipInput');
+    const dropZone = document.getElementById('dropZone');
+    const status = document.getElementById('status');
+    const preview = document.getElementById('preview');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let manifestBlob = null;
 
-      const status = document.getElementById('status');
+    async function processZip(file) {
       status.textContent = 'Zip dosyası okunuyor...';
+      preview.textContent = '';
+      downloadBtn.style.display = 'none';
 
       const jszip = new JSZip();
       const zip = await jszip.loadAsync(file);
-
       const entries = [];
 
       await Promise.all(Object.keys(zip.files).map(async filename => {
@@ -41,10 +67,39 @@
       }));
 
       const manifestContent = '# 📦 Manifest Dosyası\n\n' + entries.sort().join('\n');
-      const blob = new Blob([manifestContent], { type: 'text/plain;charset=utf-8' });
-      saveAs(blob, 'manifest.txt');
+      preview.textContent = manifestContent;
+      manifestBlob = new Blob([manifestContent], { type: 'text/plain;charset=utf-8' });
+      downloadBtn.style.display = 'inline-block';
+      status.textContent = 'manifest.txt oluşturuldu';
+    }
 
-      status.textContent = 'manifest.txt indirilmeye hazır!';
+    zipInput.addEventListener('change', e => {
+      if (e.target.files.length > 0) {
+        processZip(e.target.files[0]);
+      }
+    });
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = '#e0e0e0';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.backgroundColor = '#f9f9f9';
+    });
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = '#f9f9f9';
+      if (e.dataTransfer.files.length > 0) {
+        processZip(e.dataTransfer.files[0]);
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (manifestBlob) {
+        saveAs(manifestBlob, 'manifest.txt');
+      }
     });
   </script>
 </body>
