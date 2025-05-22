@@ -101,12 +101,13 @@
     const details = document.getElementById('details');
     const usdRateEl = document.getElementById('usdRate');
 
-    fetch('https://api.exchangerate.host/latest?base=USD&symbols=TRY')
-      .then(r => r.json())
-      .then(d => {
-        const rate = d && d.rates && d.rates.TRY;
+    fetch('https://api.frankfurter.app/latest?from=USD&to=TRY')
+      .then(response => response.json())
+      .then(data => {
+        const rate = data && data.rates && data.rates.TRY;
         if (rate) {
           usdRateEl.textContent = `1 USD = ${rate.toFixed(2)} TL`;
+          console.log('USD -> TRY:', rate);
         } else {
           usdRateEl.textContent = 'D\u00f6viz kuru al\u0131namad\u0131';
         }
