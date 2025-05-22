@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lazer Sarfiyat Hesaplama</title>
+  <style>
+    :root {
+      --primary: #0066cc;
+      --bg: #f9f9f9;
+      --accent: #e0e0e0;
+      --font: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      padding: 1rem;
+      margin: auto;
+      max-width: 800px;
+      background: var(--bg);
+      color: #333;
+      line-height: 1.5;
+      padding-bottom: 4rem; /* space for footer */
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      text-align: center;
+      color: var(--primary);
+    }
+
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 5px;
+      border: 1px solid var(--accent);
+      font-size: 1rem;
+    }
+
+    #details {
+      margin-top: 1rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    a {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      background: var(--primary);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--accent);
+      text-align: center;
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lazer Sarfiyat Hesaplama</h1>
+  <select id="powerSelect">
+    <option value="">POWER seçiniz</option>
+  </select>
+  <select id="materialSelect" disabled>
+    <option value="">MATERIAL seçiniz</option>
+  </select>
+  <select id="gasesSelect" disabled>
+    <option value="">GASES seçiniz</option>
+  </select>
+  <select id="thicknessSelect" disabled>
+    <option value="">THICKNESS seçiniz</option>
+  </select>
+  <div id="details"></div>
+  <a href="index.html">Ana Sayfa</a>
+  <script>
+    let data = [];
+    const powerSelect = document.getElementById('powerSelect');
+    const materialSelect = document.getElementById('materialSelect');
+    const gasesSelect = document.getElementById('gasesSelect');
+    const thicknessSelect = document.getElementById('thicknessSelect');
+    const details = document.getElementById('details');
+
+    fetch('laser_data.csv')
+      .then(r => r.text())
+      .then(parseCSV)
+      .then(d => { data = d; populatePower(); });
+
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines.shift().split(',');
+      return lines.map(line => {
+        const cells = line.split(',');
+        const obj = {};
+        headers.forEach((h, i) => {
+          obj[h.trim()] = cells[i] ? cells[i].trim() : '';
+        });
+        return obj;
+      });
+    }
+
+    function populatePower() {
+      const powers = [...new Set(data.map(r => r.Current))].sort((a, b) => parseFloat(a) - parseFloat(b));
+      powerSelect.innerHTML = '<option value="">POWER seçiniz</option>' +
+        powers.map(p => `<option value="${p}">${p}</option>`).join('');
+      powerSelect.disabled = false;
+    }
+
+    powerSelect.addEventListener('change', () => {
+      materialSelect.innerHTML = '<option value="">MATERIAL seçiniz</option>';
+      gasesSelect.innerHTML = '<option value="">GASES seçiniz</option>';
+      thicknessSelect.innerHTML = '<option value="">THICKNESS seçiniz</option>';
+      details.innerHTML = '';
+      if (powerSelect.value) {
+        const mats = [...new Set(data.filter(r => r.Current === powerSelect.value).map(r => r.Material))];
+        materialSelect.innerHTML += mats.map(m => `<option value="${m}">${m}</option>`).join('');
+        materialSelect.disabled = false;
+        gasesSelect.disabled = true;
+        thicknessSelect.disabled = true;
+      } else {
+        materialSelect.disabled = true;
+        gasesSelect.disabled = true;
+        thicknessSelect.disabled = true;
+      }
+    });
+
+    materialSelect.addEventListener('change', () => {
+      gasesSelect.innerHTML = '<option value="">GASES seçiniz</option>';
+      thicknessSelect.innerHTML = '<option value="">THICKNESS seçiniz</option>';
+      details.innerHTML = '';
+      if (materialSelect.value) {
+        const gasList = [...new Set(data.filter(r => r.Current === powerSelect.value && r.Material === materialSelect.value).map(r => r.Gases))];
+        gasesSelect.innerHTML += gasList.map(g => `<option value="${g}">${g}</option>`).join('');
+        gasesSelect.disabled = false;
+        thicknessSelect.disabled = true;
+      } else {
+        gasesSelect.disabled = true;
+        thicknessSelect.disabled = true;
+      }
+    });
+
+    gasesSelect.addEventListener('change', () => {
+      thicknessSelect.innerHTML = '<option value="">THICKNESS seçiniz</option>';
+      details.innerHTML = '';
+      if (gasesSelect.value) {
+        const thicks = [...new Set(data.filter(r =>
+          r.Current === powerSelect.value &&
+          r.Material === materialSelect.value &&
+          r.Gases === gasesSelect.value
+        ).map(r => r.Thickness))].sort((a, b) => parseFloat(a) - parseFloat(b));
+        thicknessSelect.innerHTML += thicks.map(t => `<option value="${t}">${t}</option>`).join('');
+        thicknessSelect.disabled = false;
+      } else {
+        thicknessSelect.disabled = true;
+      }
+    });
+
+    thicknessSelect.addEventListener('change', () => {
+      details.innerHTML = '';
+      if (thicknessSelect.value) {
+        const row = data.find(r =>
+          r.Current === powerSelect.value &&
+          r.Material === materialSelect.value &&
+          r.Gases === gasesSelect.value &&
+          r.Thickness === thicknessSelect.value
+        );
+        if (row) {
+          details.innerHTML = `<ul>
+              <li>Amper: ${row.CutCurrent || row.Current}</li>
+              <li>Gaz Cinsi: ${row.CutPlasmaGas}</li>
+              <li>Gaz Akışı: ${row.CutPlasmaPressure}</li>
+              <li>Voltage: ${row.ArcVoltage}</li>
+              <li>Speed: ${row.Feedrate}</li>
+              <li>Nozzle: ${row.Nozzle}</li>
+            </ul>`;
+        }
+      }
+    });
+  </script>
+  <footer>created by Fahreddin TOKATLI</footer>
+</body>
+</html>
