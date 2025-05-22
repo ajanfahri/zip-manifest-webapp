@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DXF Araçları</title>
+  <script src="https://cdn.jsdelivr.net/npm/dxf-parser@1.1.5/dist/dxf-parser.min.js"></script>
+  <script src="dxf-handler.js"></script>
+  <style>
+    :root {
+      --primary: #0066cc;
+      --bg: #f9f9f9;
+      --accent: #e0e0e0;
+      --font: 'Segoe UI', sans-serif;
+    }
+    body {
+      font-family: var(--font);
+      padding: 1rem;
+      margin: auto;
+      max-width: 900px;
+      background-color: var(--bg);
+      color: #333;
+      line-height: 1.5;
+      padding-bottom: 4rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      text-align: center;
+      color: var(--primary);
+    }
+    input[type="file"] {
+      display: block;
+      margin: 1rem auto;
+    }
+    #canvasContainer {
+      position: relative;
+      border: 1px solid var(--accent);
+      margin-top: 1rem;
+    }
+    canvas {
+      width: 100%;
+      height: 600px;
+      background: #fff;
+      display: block;
+      cursor: grab;
+    }
+    #metrics {
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: bold;
+    }
+    a {
+      display: inline-block;
+      margin-top: 1rem;
+      color: #fff;
+      background: var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--accent);
+      text-align: center;
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>DXF Araçları</h1>
+  <input type="file" id="dxfInput" accept=".dxf">
+  <div id="canvasContainer">
+    <canvas id="dxfCanvas" width="800" height="600"></canvas>
+  </div>
+  <div id="metrics"></div>
+  <a href="index.html">Ana Sayfaya Dön</a>
+  <script>
+    const canvas = document.getElementById('dxfCanvas');
+    const viewer = new DxfHandler.DxfViewer(canvas);
+    const metricsDiv = document.getElementById('metrics');
+    document.getElementById('dxfInput').addEventListener('change', e => {
+      if (e.target.files[0]) {
+        viewer.load(e.target.files[0], m => {
+          metricsDiv.textContent =
+            `Kesim Uzunluğu: ${m.cutLength.toFixed(2)} | Patlatma Sayısı: ${m.explodeCount}`;
+        });
+      }
+    });
+  </script>
+  <footer>created by Fahreddin TOKATLI</footer>
+</body>
+</html>
