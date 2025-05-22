@@ -67,10 +67,17 @@
       padding: 0.5rem 0;
       font-size: 0.9rem;
     }
+
+    #usdRate {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
   <h1>Lazer Sarfiyat Hesaplama</h1>
+  <div id="usdRate">Döviz kuru yükleniyor...</div>
   <select id="powerSelect">
     <option value="">POWER seçiniz</option>
   </select>
@@ -92,6 +99,21 @@
     const gasesSelect = document.getElementById('gasesSelect');
     const thicknessSelect = document.getElementById('thicknessSelect');
     const details = document.getElementById('details');
+    const usdRateEl = document.getElementById('usdRate');
+
+    fetch('https://api.exchangerate.host/latest?base=USD&symbols=TRY')
+      .then(r => r.json())
+      .then(d => {
+        const rate = d && d.rates && d.rates.TRY;
+        if (rate) {
+          usdRateEl.textContent = `1 USD = ${rate.toFixed(2)} TL`;
+        } else {
+          usdRateEl.textContent = 'D\u00f6viz kuru al\u0131namad\u0131';
+        }
+      })
+      .catch(() => {
+        usdRateEl.textContent = 'D\u00f6viz kuru al\u0131namad\u0131';
+      });
 
     fetch('laser_data.csv')
       .then(r => r.text())
